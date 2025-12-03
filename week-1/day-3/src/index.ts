@@ -1,4 +1,13 @@
-import express, { type Application, type Request, type Response } from 'express'
+import express, { type Application, type NextFunction, type Request, type Response } from 'express'
+import morgan from 'morgan'
+import helmet from 'helmet'
+import cors from 'cors'
+import {
+    body,
+    param,
+    validationResult,
+    type ValidationChain,
+} from 'express-validator'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -7,20 +16,155 @@ const app: Application = express()
 const HOST = process.env.HOST
 const PORT = process.env.PORT
 
+interface CustomRequest extends Request {
+    startTime?: number
+}
+
+app.use(helmet())
+app.use(cors())
+app.use(morgan('dev'))
 app.use(express.json())
 
-let products = [
+app.use((req: CustomRequest, _res: Response, next: NextFunction) => {
+    console.log(`Request masuk: ${req.method} ${req.path}`)
+    req.startTime = Date.now()
+    next()
+})
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers['x-api-key']
+    if (!apiKey) {
+        return res.status(401).json({
+            success: false,
+            message: "Header X-API-Key wajib diisi untuk akses API!"
+        })
+    }
+
+    if (apiKey !== 'katasandi123') {
+        return res.status(401).json({
+            success: false,
+            message: "API Key tidak valid!"
+        })
+    }
+
+    next()
+})
+
+interface Products {
+    id: number
+    nama: string
+    deskripsi: string
+    harga: number
+}
+
+let products: Products[] = [
     { id: 1, nama: "Laptop Gaming", deskripsi: "Intel i7, RTX 3060", harga: 15000000 },
     { id: 2, nama: "Keyboard Mekanikal", deskripsi: "Blue Switch, RGB", harga: 800000 },
     { id: 3, nama: "Mouse Wireless", deskripsi: "Ergonomic, Silent Click", harga: 300000 },
 ]
 
+const asyncHandler = (fn: Function) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+};
+
+interface ApiResponse {
+    success: boolean;
+    message: string;
+    data?: unknown;
+    pagination?: {
+        page: number;
+        limit: number;
+        total: number;
+    };
+    errors?: Array<{
+        field: string;
+        message: string;
+    }> | { stack?: string };
+}
+
+const successResponse = (
+    res: Response,
+    message: string,
+    data: unknown | null,
+    pagination: { page: number; limit: number; total: number } | null = null,
+    statusCode: number = 200
+) => {
+    const response: ApiResponse = {
+        success: true,
+        message
+    }
+
+    if (data !== null) response.data = data
+    if (pagination) response.pagination = pagination
+
+    return res.status(statusCode).json(response)
+}
+
+const errorResponse = (
+    res: Response,
+    message: string,
+    statusCode: number = 400,
+    errors: Array<{ field: string; message: string }> | { stack?: string } | null = null
+) => {
+    const response: ApiResponse = {
+        success: false,
+        message,
+    };
+
+    if (errors) response.errors = errors;
+
+    return res.status(statusCode).json(response);
+};
+
+const validate = (validations: ValidationChain[]) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        await Promise.all(validations.map(validation => validation.run(req)))
+
+        const errors = validationResult(req)
+        if (errors.isEmpty()) {
+            return next()
+        }
+
+        const errorList = errors.array().map(err => ({
+            field: err.type === 'field' ? err.path : 'unknown',
+            message: err.msg
+        }))
+
+        return errorResponse(res, "Validasi gagal", 400, errorList)
+    }
+}
+
+const createProductValidation = [
+    body('nama')
+        .trim()
+        .notEmpty().withMessage('Nama produk wajib diisi')
+        .isLength({ min: 3 }).withMessage('Nama produk minimal 3 karakter'),
+
+    body('deskripsi')
+        .trim()
+        .notEmpty().withMessage('Deskripsi wajib diisi'),
+
+    body('harga')
+        .isNumeric().withMessage('Harga harus angka')
+        .custom(value => value > 0).withMessage('Harga harus lebih dari 0')
+]
+
+const getProductByIdValidation = [
+    param('id')
+        .isNumeric().withMessage('ID harus angka')
+]
+
 app.get('/', (_req: Request, res: Response) => {
-    res.json({
-        message: "Selamat datang di API E-Commerce!",
-        hari: 3,
-        status: "Server hidup!"
-    })
+    successResponse(
+        res,
+        "Selamat datang di API E-Commerce!",
+        {
+            hari: 3,
+            status: "Server hidup",
+        },
+    )
 })
 
 app.get('/api/products', (_req: Request, res: Response) => {
@@ -31,28 +175,23 @@ app.get('/api/products', (_req: Request, res: Response) => {
     })
 })
 
-app.get('/api/products/:id', (req: Request, res: Response) => {
+app.get('/api/products/:id', validate(getProductByIdValidation), (req: Request, res: Response) => {
     if (!req.params.id) {
-        res.json({
-            message: "Parameternya gk ada woiiii"
-        })
-        return
+        throw new Error("Paramnya gk ada wok")
     }
 
     const id = parseInt(req.params.id)
     const product = products.find(p => p.id === id)
 
     if (!product) {
-        res.json({
-            status: false,
-            message: "Product tidak ditemukan"
-        })
+        throw new Error("Product tidak ditemukan")
     }
 
-    res.json({
-        status: true,
-        data: product
-    })
+    successResponse(
+        res,
+        "Produk berhasil diambil",
+        product
+    )
 })
 
 app.get('/api/products/search', (req: Request, res: Response) => {
@@ -80,15 +219,8 @@ app.get('/api/products/search', (req: Request, res: Response) => {
     });
 })
 
-app.post('/api/products', (req: Request, res: Response) => {
+app.post('/api/products', validate(createProductValidation), (req: Request, res: Response) => {
     const { nama, deskripsi, harga } = req.body
-
-    if (typeof harga !== 'number') {
-        res.json({
-            status: false,
-            message: "Harga tuh pake angka, bukan string dodol"
-        })
-    }
 
     const newProduct = {
         id: products.length + 1,
@@ -99,11 +231,13 @@ app.post('/api/products', (req: Request, res: Response) => {
 
     products.push(newProduct)
 
-    res.status(201).json({
-        status: true,
-        message: "Produk berhasil ditambahkan",
-        data: products,
-    })
+    successResponse(
+        res,
+        "Produk berhasil ditambahkan",
+        products,
+        null,
+        201,
+    )
 })
 
 app.put('/api/products/:id', (req: Request, res: Response) => {
@@ -139,6 +273,28 @@ app.delete('/api/products/:id', (req: Request, res: Response) => {
         data: deleted[0],
     })
 })
+
+app.get('/api/async', asyncHandler(async (_req: Request, res: Response) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    successResponse(res, "Async berhasil!", null);
+}))
+
+app.get(/.*/, (req: Request, _res: Response) => {
+    throw new Error(`Route ${req.originalUrl} tidak ada di API E-Commerce`);
+})
+
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('ERROR:', err.message);
+
+    const statusCode = err.message.includes('tidak ditemukan') ? 404 : 400;
+
+    errorResponse(
+        res,
+        err.message || 'Terjadi kesalahan server',
+        statusCode,
+        process.env.NODE_ENV === 'development' ? { stack: err.stack } as { stack?: string } : null
+    );
+});
 
 app.listen(PORT, () => {
     console.log(`Server running at ${HOST}:${PORT}`)
