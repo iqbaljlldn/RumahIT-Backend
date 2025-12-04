@@ -1,7 +1,6 @@
 import type { Request, Response } from "express"
-import { products } from "../models/product.model"
 import { successResponse } from "../utils/response"
-import { getAllProducts, getProductById, searchProducts } from "../services/product.service"
+import { createProduct, deleteProduct, getAllProducts, getProductById, searchProducts, updateProduct } from "../services/product.service"
 
 export const getAll = (_req: Request, res: Response) => {
     const { products, total } = getAllProducts()
@@ -45,14 +44,7 @@ export const search = (req: Request, res: Response) => {
 export const create = (req: Request, res: Response) => {
     const { nama, deskripsi, harga } = req.body
 
-    const newProduct = {
-        id: products.length + 1,
-        nama,
-        deskripsi,
-        harga,
-    }
-
-    products.push(newProduct)
+    const products = createProduct(nama, deskripsi, harga)
 
     successResponse(
         res,
@@ -64,35 +56,21 @@ export const create = (req: Request, res: Response) => {
 }
 
 export const update = (req: Request, res: Response) => {
-    const id = parseInt(req.params.id!)
-    const index = products.findIndex(p => p.id === id)
+    const product = updateProduct(req.params.id!, req.body)
 
-    if (index === -1) {
-        return res.status(404).json({ success: false, message: "Produk tidak ada" });
-    }
-
-    products[index] = { ...products[index], ...req.body }
-
-    res.json({
-        status: true,
-        message: "Produk berhasil diupdate",
-        data: products[index],
-    })
+    successResponse(
+        res,
+        "Produk berhasil diupdate",
+        product
+    )
 }
 
 export const remove = (req: Request, res: Response) => {
-    const id = parseInt(req.params.id!)
-    const index = products.findIndex(p => p.id === id)
+    const deleted = deleteProduct(req.params.id!)
 
-    if (index === -1) {
-        return res.status(404).json({ success: false, message: "Produk tidak ada" });
-    }
-
-    const deleted = products.splice(index, 1)
-
-    res.json({
-        status: true,
-        message: "Produk berhasil dihapus",
-        data: deleted[0],
-    })
+    successResponse(
+        res,
+        "Produk berhasil dihapus",
+        deleted
+    )
 }

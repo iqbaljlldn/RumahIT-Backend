@@ -35,3 +35,42 @@ export const searchProducts = (name?: string, min_price?: string, max_price?: st
 
     return result
 }
+
+export const createProduct = (nama: string, deskripsi: string, harga: number) => {
+    const newProduct = {
+        id: products.length + 1,
+        nama,
+        deskripsi,
+        harga,
+    }
+
+    products.push(newProduct)
+
+    return products
+}
+
+export const updateProduct = (id: string, data: any) => {
+    const numId = parseInt(id)
+    const index = products.findIndex(p => p.id === numId)
+
+    if (index === -1) {
+        throw new Error("Produk tidak ditemukan")
+    }
+
+    products[index] = { ...products[index], ...data }
+
+    return products[index]
+}
+
+export const deleteProduct = (id: string) => {
+    const numId = parseInt(id)
+    const index = products.findIndex(p => p.id === numId)
+
+    if (index === -1) {
+        throw new Error("Produk tidak ditemukan")
+    }
+
+    const deleted = products.splice(index, 1)
+
+    return deleted
+}
