@@ -32,7 +32,11 @@ export const createProductValidation = [
 
     body('harga')
         .isNumeric().withMessage('Harga harus angka')
-        .custom(value => value > 0).withMessage('Harga harus lebih dari 0')
+        .custom(value => value > 0).withMessage('Harga harus lebih dari 0'),
+
+    body('stock')
+        .isNumeric().withMessage('Stock harus angka')
+        .custom(value => value > 0).withMessage('Stock harus lebih dari 0')
 ]
 
 export const getProductByIdValidation = [
