@@ -21,21 +21,21 @@ export const validate = (validations: ValidationChain[]) => {
 }
 
 export const createProductValidation = [
-    body('nama')
+    body('name')
         .trim()
         .notEmpty().withMessage('Nama produk wajib diisi')
         .isLength({ min: 3 }).withMessage('Nama produk minimal 3 karakter'),
 
-    body('deskripsi')
+    body('description')
         .trim()
         .notEmpty().withMessage('Deskripsi wajib diisi'),
 
-    body('harga')
-        .isNumeric().withMessage('Harga harus angka')
+    body('price')
+        .isNumeric().withMessage('Harga harus angka').toFloat()
         .custom(value => value > 0).withMessage('Harga harus lebih dari 0'),
 
     body('stock')
-        .isNumeric().withMessage('Stock harus angka')
+        .isNumeric().withMessage('Stock harus angka').toInt()
         .custom(value => value > 0).withMessage('Stock harus lebih dari 0')
 ]
 

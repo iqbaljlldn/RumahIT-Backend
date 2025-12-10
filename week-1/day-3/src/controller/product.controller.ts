@@ -42,12 +42,12 @@ export const search = async (req: Request, res: Response) => {
 }
 
 export const create = async (req: Request, res: Response) => {
-    const { nama, deskripsi, harga, stock } = req.body
+    const { name, description, price, stock } = req.body
     const data = {
-        nama: String(nama),
-        harga: Number(harga),
+        name: String(name),
+        price: Number(price),
         stock: Number(stock),
-        ...(deskripsi && { deskripsi: deskripsi })
+        ...(description && { description: description })
     }
 
     const products = await createProduct(data)
