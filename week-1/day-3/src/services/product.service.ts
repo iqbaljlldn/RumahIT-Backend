@@ -3,8 +3,11 @@ import { getPrisma } from "../prisma"
 
 const prisma = getPrisma()
 
-export const getAllProducts = async (): Promise<Product[]> => {
-    return await prisma.product.findMany()
+export const getAllProducts = async (): Promise<{ products: Product[], total: number }> => {
+    const products = await prisma.product.findMany()
+    const total = products.length
+
+    return { products, total }
 }
 
 export const getProductById = async (id: string): Promise<Product> => {

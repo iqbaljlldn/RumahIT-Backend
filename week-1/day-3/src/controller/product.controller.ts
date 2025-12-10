@@ -2,8 +2,8 @@ import type { Request, Response } from "express"
 import { successResponse } from "../utils/response"
 import { createProduct, deleteProduct, getAllProducts, getProductById, searchProducts, updateProduct } from "../services/product.service"
 
-export const getAll = (_req: Request, res: Response) => {
-    const { products, total } = getAllProducts()
+export const getAll = async (_req: Request, res: Response) => {
+    const { products, total } = await getAllProducts()
 
     successResponse(
         res,
@@ -15,12 +15,12 @@ export const getAll = (_req: Request, res: Response) => {
     )
 }
 
-export const getById = (req: Request, res: Response) => {
+export const getById = async (req: Request, res: Response) => {
     if (!req.params.id) {
         throw new Error("Paramnya gk ada wok")
     }
 
-    const product = getProductById(req.params.id)
+    const product = await getProductById(req.params.id)
 
     successResponse(
         res,
@@ -29,10 +29,10 @@ export const getById = (req: Request, res: Response) => {
     )
 }
 
-export const search = (req: Request, res: Response) => {
+export const search = async (req: Request, res: Response) => {
     const { name, max_price, min_price } = req.query;
 
-    const result = searchProducts(name?.toString(), max_price?.toString(), min_price?.toString())
+    const result = await searchProducts(name?.toString(), Number(max_price), Number(min_price))
 
     successResponse(
         res,
@@ -41,10 +41,16 @@ export const search = (req: Request, res: Response) => {
     )
 }
 
-export const create = (req: Request, res: Response) => {
-    const { nama, deskripsi, harga } = req.body
+export const create = async (req: Request, res: Response) => {
+    const { nama, deskripsi, harga, stock } = req.body
+    const data = {
+        nama: String(nama),
+        harga: Number(harga),
+        stock: Number(stock),
+        ...(deskripsi && { deskripsi: deskripsi })
+    }
 
-    const products = createProduct(nama, deskripsi, harga)
+    const products = await createProduct(data)
 
     successResponse(
         res,
@@ -55,8 +61,8 @@ export const create = (req: Request, res: Response) => {
     )
 }
 
-export const update = (req: Request, res: Response) => {
-    const product = updateProduct(req.params.id!, req.body)
+export const update = async (req: Request, res: Response) => {
+    const product = await updateProduct(req.params.id!, req.body)
 
     successResponse(
         res,
@@ -65,8 +71,8 @@ export const update = (req: Request, res: Response) => {
     )
 }
 
-export const remove = (req: Request, res: Response) => {
-    const deleted = deleteProduct(req.params.id!)
+export const remove = async (req: Request, res: Response) => {
+    const deleted = await deleteProduct(req.params.id!)
 
     successResponse(
         res,
