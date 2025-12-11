@@ -5,6 +5,7 @@ import cors from 'cors'
 import { errorHandler } from './middleware/error.handler'
 import { successResponse } from './utils/response'
 import productRouter from './routes/product.route'
+import categoryRouter from './routes/category.route'
 
 const app: Application = express()
 
@@ -50,6 +51,7 @@ app.get('/', (_req: Request, res: Response) => {
 })
 
 app.use('/api/products', productRouter)
+app.use('/api/category', categoryRouter)
 
 app.get(/.*/, (req: Request, _res: Response) => {
     throw new Error(`Route ${req.originalUrl} tidak ada di API E-Commerce`);
