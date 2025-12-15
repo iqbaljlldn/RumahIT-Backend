@@ -8,9 +8,10 @@ model Product {
     categoryId Int?
     category   Category? @relation(fields: [categoryId], references: [id])
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    deletedAt DateTime?
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @updatedAt
+    deletedAt  DateTime?
+    orderItems OrderItems[]
 
     @@map("products")
 }

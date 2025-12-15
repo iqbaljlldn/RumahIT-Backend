@@ -1,0 +1,10 @@
+model User {
+    id            Int    @id @default(autoincrement())
+    name          String
+    email         String @unique
+    password_hash String
+
+    orders Order[]
+
+    @@map("users")
+}
