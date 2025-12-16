@@ -2,25 +2,20 @@ import { getPrisma } from "../prisma"
 
 const prisma = getPrisma()
 
-export interface CreateOrder {
-    userId: number
-    // total: number // hapus ini
-    orderItems: OrderItems[]
-}
-
 export interface OrderItems {
     productId: number
     quantity: number
 }
 
-export const checkout = async (data: CreateOrder) => {
-    if (!data.orderItems || data.orderItems.length === 0) {
+export const checkout = async (userId: number, payload: { data: OrderItems[] }) => {
+    const data = payload.data
+    if (!data || data.length === 0) {
         throw new Error("Order items tidak boleh kosong");
     }
     
     // hitung harga total
-    let total = 0
-    const products = data.orderItems.map(i => { return { id: i.productId, qty: i.quantity } })
+    let total = 0;
+    const products = data.map(i => { return { id: i.productId, qty: i.quantity } })
     for (const product of products) {
         const price = await prisma.product.findUnique({
             where: { id: product.id },
@@ -33,11 +28,11 @@ export const checkout = async (data: CreateOrder) => {
         const result = await prisma.$transaction(async (tx) => {
             const newOrder = await tx.order.create({
                 data: {
-                    userId: data.userId,
+                    userId,
                     total,
                 }
             })
-            for (const item of data.orderItems) {
+            for (const item of data) {
                 await tx.orderItems.create({
                     data: {
                         orderId: newOrder.id,

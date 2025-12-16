@@ -7,6 +7,7 @@ import { successResponse } from './utils/response'
 import productRouter from './routes/product.route'
 import categoryRouter from './routes/category.route'
 import orderRouter from './routes/order.route'
+import authRouter from './routes/auth.route'
 
 const app: Application = express()
 
@@ -18,25 +19,6 @@ app.use(express.json())
 app.use((req: Request, _res: Response, next: NextFunction) => {
     console.log(`Request masuk: ${req.method} ${req.path}`)
     req.startTime = Date.now();
-    next()
-})
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const apiKey = req.headers['x-api-key']
-    if (!apiKey) {
-        return res.status(401).json({
-            success: false,
-            message: "Header X-API-Key wajib diisi untuk akses API!"
-        })
-    }
-
-    if (apiKey !== 'katasandi123') {
-        return res.status(401).json({
-            success: false,
-            message: "API Key tidak valid!"
-        })
-    }
-
     next()
 })
 
@@ -54,6 +36,7 @@ app.get('/', (_req: Request, res: Response) => {
 app.use('/api/products', productRouter)
 app.use('/api/category', categoryRouter)
 app.use('/api/order', orderRouter)
+app.use('/api/auth', authRouter)
 
 app.get(/.*/, (req: Request, _res: Response) => {
     throw new Error(`Route ${req.originalUrl} tidak ada di API E-Commerce`);
