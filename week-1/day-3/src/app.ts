@@ -15,6 +15,7 @@ app.use(helmet())
 app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json())
+app.use(express.static("public"))
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
     console.log(`Request masuk: ${req.method} ${req.path}`)
