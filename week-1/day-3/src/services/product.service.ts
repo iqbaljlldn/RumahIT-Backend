@@ -1,7 +1,5 @@
-import type { Product } from "../generated/client"
-import { getPrisma } from "../prisma"
-
-const prisma = getPrisma()
+import type { Prisma, Product } from "../generated/client"
+import * as productRepo from '../repository/product.repository'
 
 interface FindAllParams {
     page: number
@@ -27,23 +25,19 @@ export const getAllProducts = async (params: FindAllParams): Promise<ProductList
 
     const skip = (page - 1) * limit
 
-    const whereClause: any = { deletedAt: null }
+    const whereClause: Prisma.ProductWhereInput = { deletedAt: null }
 
     if (search?.name) whereClause.name = { contains: search.name, mode: 'insensitive' }
     if (search?.min_price) whereClause.price = { gte: search.min_price }
     if (search?.max_price) whereClause.price = { lte: search.max_price }
 
-    const products = await prisma.product.findMany({
-        skip: skip,
-        take: limit,
-        where: whereClause,
-        orderBy: sortBy ? { [sortBy]: sortOrder || 'desc' } : { createdAt: 'desc' },
-        include: { category: true },
-    })
+    const sortCriteria: Prisma.ProductOrderByWithRelationInput = sortBy
+        ? { [sortBy]: sortOrder || 'desc' }
+        : { createdAt: 'desc' }
 
-    const total = await prisma.product.count({
-        where: whereClause
-    })
+    const products = await productRepo.list(skip, limit, whereClause, sortCriteria)
+
+    const total = await productRepo.countAll(whereClause)
 
     return {
         products,
@@ -56,13 +50,7 @@ export const getAllProducts = async (params: FindAllParams): Promise<ProductList
 export const getProductById = async (id: string): Promise<Product> => {
     const numId = parseInt(id)
 
-    const product = await prisma.product.findUnique({
-        where: {
-            id: numId,
-            deletedAt: null,
-        },
-        include: { category: true },
-    })
+    const product = await productRepo.findById(numId)
 
     if (!product) {
         throw new Error("Product tidak ditemukan")
@@ -71,36 +59,8 @@ export const getProductById = async (id: string): Promise<Product> => {
     return product
 }
 
-// export const searchProducts = async (name?: string, min_price?: number, max_price?: number): Promise<Product[]> => {
-//     return await prisma.product.findMany({
-//         where: {
-//             ...(name && {
-//                 name: {
-//                     contains: name,
-//                     mode: 'insensitive'
-//                 }
-//             }),
-//             price: {
-//                 ...(min_price && { gte: min_price }),
-//                 ...(max_price && { lte: max_price }),
-//             },
-//             deletedAt: null,
-//         },
-//         include: { category: true }
-//     })
-// }
-
 export const createProduct = async (data: { name: string, description?: string, price: number, stock: number, image: string, categoryId?: number }): Promise<Product> => {
-    return await prisma.product.create({
-        data: {
-            name: data.name,
-            description: data.description ?? null,
-            price: data.price,
-            stock: data.stock,
-            categoryId: data.categoryId ?? null,
-            image: data.image
-        },
-    })
+    return await productRepo.create(data)
 }
 
 export const updateProduct = async (id: string, data: Partial<Product>): Promise<Product> => {
@@ -108,23 +68,11 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
 
     const numId = parseInt(id)
 
-    return await prisma.product.update({
-        where: {
-            id: numId,
-            deletedAt: null,
-        },
-        data,
-    })
+    return await productRepo.update(numId, data)
 }
 
 export const deleteProduct = async (id: string): Promise<Product> => {
     const numId = parseInt(id)
 
-    return await prisma.product.update({
-        where: {
-            id: numId,
-            deletedAt: null,
-        },
-        data: { deletedAt: new Date() }
-    })
+    return await productRepo.softDelete(numId)
 }

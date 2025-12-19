@@ -23,7 +23,15 @@ export async function countAll(where: Prisma.ProductWhereInput) {
 }
 
 export async function findById(id: number) {
-    return await prisma.product.findUnique({ where: { id } })
+    return await prisma.product.findUnique({
+        where: {
+            id,
+            deletedAt: null,
+        },
+        include: {
+            category: true
+        }
+    })
 }
 
 export async function create(data: Prisma.ProductCreateInput) {
@@ -32,14 +40,20 @@ export async function create(data: Prisma.ProductCreateInput) {
 
 export async function update(id: number, data: Prisma.ProductUpdateInput) {
     return await prisma.product.update({
-        where: { id },
+        where: {
+            id,
+            deletedAt: null,
+        },
         data
     })
 }
 
 export async function softDelete(id: number) {
     return await prisma.product.update({
-        where: { id },
+        where: {
+            id,
+            deletedAt: null,
+        },
         data: {
             deletedAt: new Date()
         }
