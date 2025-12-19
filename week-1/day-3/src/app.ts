@@ -15,6 +15,7 @@ app.use(helmet())
 app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json())
+app.set('query parser', 'extended') // wajib tambah ini agar search.name, search.max_price dsb. bisa berfungsi
 app.use(express.static("public"))
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
