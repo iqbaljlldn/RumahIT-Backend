@@ -1,17 +1,34 @@
 import type { Request, Response } from "express"
 import { successResponse } from "../utils/response"
-import { createProduct, deleteProduct, getAllProducts, getProductById, searchProducts, updateProduct } from "../services/product.service"
+import { createProduct, deleteProduct, getAllProducts, getProductById, updateProduct } from "../services/product.service"
 
-export const getAll = async (_req: Request, res: Response) => {
-    const { products, total } = await getAllProducts()
+export const getAll = async (req: Request, res: Response) => {
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const search = req.query.search as any
+    const sortBy = req.query.sortBy as string
+    const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc'
+
+    const result = await getAllProducts({
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder
+    })
+
+    const pagination = {
+        page: result.currentPage,
+        limit,
+        total: result.total,
+        totalPages: result.totalPages,
+    }
 
     successResponse(
         res,
         "Produk berhasil diambil",
-        {
-            jumlah: total,
-            data: products
-        }
+        result.products,
+        pagination
     )
 }
 
@@ -29,21 +46,21 @@ export const getById = async (req: Request, res: Response) => {
     )
 }
 
-export const search = async (req: Request, res: Response) => {
-    const { name, max_price, min_price } = req.query;
+// export const search = async (req: Request, res: Response) => {
+//     const { name, max_price, min_price } = req.query;
 
-    const result = await searchProducts(name?.toString(), Number(max_price), Number(min_price))
+//     const result = await searchProducts(name?.toString(), Number(max_price), Number(min_price))
 
-    successResponse(
-        res,
-        "Produk berhasil diambil",
-        result
-    )
-}
+//     successResponse(
+//         res,
+//         "Produk berhasil diambil",
+//         result
+//     )
+// }
 
 export const create = async (req: Request, res: Response) => {
     const file = req.file
-    if (!file) throw new Error("Image is required")        
+    if (!file) throw new Error("Image is required")
     const { name, description, price, stock, categoryId } = req.body
 
     const imageUrl = `/public/uploads/${file.filename}`
