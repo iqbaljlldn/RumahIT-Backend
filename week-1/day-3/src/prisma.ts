@@ -5,7 +5,7 @@ import config from './utils/env'
 
 let prisma: PrismaClient
 
-export const getPrisma = () => {
+const getPrisma = () => {
     if (!prisma) {
         const pool = new Pool({ connectionString: config.DATABASE_URL })
         const adapter = new PrismaPg(pool)
@@ -13,3 +13,6 @@ export const getPrisma = () => {
     }
     return prisma
 }
+
+const prismaInstance = getPrisma()
+export default prismaInstance

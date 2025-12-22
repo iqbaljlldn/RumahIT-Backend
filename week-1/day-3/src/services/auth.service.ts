@@ -1,9 +1,7 @@
-import { getPrisma } from '../prisma';
+import prisma from '../prisma';
 import config from '../utils/env'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken';
-
-const prisma = getPrisma()
 
 export const register = async (data: {
     name: string;

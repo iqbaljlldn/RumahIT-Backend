@@ -1,106 +1,106 @@
 import type { Request, Response } from "express"
 import { successResponse } from "../utils/response"
-import { createProduct, deleteProduct, getAllProducts, getProductById, updateProduct } from "../services/product.service"
+import type { IProductService } from "../services/product.service";
 
-export const getAll = async (req: Request, res: Response) => {
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-    const search = req.query.search as any
-    const sortBy = req.query.sortBy as string
-    const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc'
+export interface IProductController {
+    list(req: Request, res: Response): Promise<void>
+    getById(req: Request, res: Response): Promise<void>;
+    create(req: Request, res: Response): Promise<void>
+    update(req: Request, res: Response): Promise<void>
+    remove(req: Request, res: Response): Promise<void>
+}
 
-    const result = await getAllProducts({
-        page,
-        limit,
-        search,
-        sortBy,
-        sortOrder
-    })
+export class ProductController implements IProductController {
+    constructor(private productService: IProductService) { }
 
-    const pagination = {
-        page: result.currentPage,
-        limit,
-        total: result.total,
-        totalPages: result.totalPages,
+    async list(req: Request, res: Response) {
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 10
+        const search = req.query.search as any
+        const sortBy = req.query.sortBy as string
+        const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc'
+
+        const result = await this.productService.list({
+            page,
+            limit,
+            search,
+            sortBy,
+            sortOrder
+        })
+
+        const pagination = {
+            page: result.currentPage,
+            limit,
+            total: result.total,
+            totalPages: result.totalPages,
+        }
+
+        successResponse(
+            res,
+            "Produk berhasil diambil",
+            result.products,
+            pagination
+        )
     }
 
-    successResponse(
-        res,
-        "Produk berhasil diambil",
-        result.products,
-        pagination
-    )
-}
+    async getById(req: Request, res: Response) {
+        if (!req.params.id) {
+            throw new Error("Paramnya gk ada wok")
+        }
 
-export const getById = async (req: Request, res: Response) => {
-    if (!req.params.id) {
-        throw new Error("Paramnya gk ada wok")
+        const product = await this.productService.getById(req.params.id)
+
+        successResponse(
+            res,
+            "Produk berhasil diambil",
+            product
+        )
     }
 
-    const product = await getProductById(req.params.id)
+    async create(req: Request, res: Response) {
+        const file = req.file
+        if (!file) throw new Error("Image is required")
+        const { name, description, price, stock, categoryId } = req.body
 
-    successResponse(
-        res,
-        "Produk berhasil diambil",
-        product
-    )
-}
+        const imageUrl = `/public/uploads/${file.filename}`
 
-// export const search = async (req: Request, res: Response) => {
-//     const { name, max_price, min_price } = req.query;
+        const data = {
+            name: String(name),
+            price: Number(price),
+            stock: Number(stock),
+            categoryId: Number(categoryId),
+            ...(description && { description: description }),
+            image: imageUrl,
+        }
 
-//     const result = await searchProducts(name?.toString(), Number(max_price), Number(min_price))
+        const products = await this.productService.create(data)
 
-//     successResponse(
-//         res,
-//         "Produk berhasil diambil",
-//         result
-//     )
-// }
-
-export const create = async (req: Request, res: Response) => {
-    const file = req.file
-    if (!file) throw new Error("Image is required")
-    const { name, description, price, stock, categoryId } = req.body
-
-    const imageUrl = `/public/uploads/${file.filename}`
-
-    const data = {
-        name: String(name),
-        price: Number(price),
-        stock: Number(stock),
-        categoryId: Number(categoryId),
-        ...(description && { description: description }),
-        image: imageUrl,
+        successResponse(
+            res,
+            "Produk berhasil ditambahkan",
+            products,
+            null,
+            201,
+        )
     }
 
-    const products = await createProduct(data)
+    async update(req: Request, res: Response) {
+        const product = await this.productService.update(req.params.id!, req.body)
 
-    successResponse(
-        res,
-        "Produk berhasil ditambahkan",
-        products,
-        null,
-        201,
-    )
-}
+        successResponse(
+            res,
+            "Produk berhasil diupdate",
+            product
+        )
+    }
 
-export const update = async (req: Request, res: Response) => {
-    const product = await updateProduct(req.params.id!, req.body)
+    async remove(req: Request, res: Response) {
+        const deleted = await this.productService.delete(req.params.id!)
 
-    successResponse(
-        res,
-        "Produk berhasil diupdate",
-        product
-    )
-}
-
-export const remove = async (req: Request, res: Response) => {
-    const deleted = await deleteProduct(req.params.id!)
-
-    successResponse(
-        res,
-        "Produk berhasil dihapus",
-        deleted
-    )
+        successResponse(
+            res,
+            "Produk berhasil dihapus",
+            deleted
+        )
+    }
 }

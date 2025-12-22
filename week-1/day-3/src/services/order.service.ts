@@ -1,6 +1,4 @@
-import { getPrisma } from "../prisma"
-
-const prisma = getPrisma()
+import prisma from "../prisma"
 
 export interface OrderItems {
     productId: number

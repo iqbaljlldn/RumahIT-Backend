@@ -1,6 +1,4 @@
-import { getPrisma } from "../prisma"
-
-const prisma = getPrisma()
+import prisma from "../prisma"
 
 export const getAllCategories = async () => {
     return await prisma.category.findMany()
