@@ -1,5 +1,5 @@
-import type { Category, Prisma, Product } from "../generated/client"
-import type { IProductRepository } from "../repository/product.repository"
+import type { Category, Prisma, Product } from "#generated/client"
+import type { IProductRepository } from "#repository/product.repository"
 
 interface FindAllParams {
     page: number

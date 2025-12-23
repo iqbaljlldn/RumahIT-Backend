@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { checkout as checkoutOrder } from "../services/order.service";
-import { successResponse } from "../utils/response";
+import { checkout as checkoutOrder } from "#services/order.service";
+import { successResponse } from "#utils/response";
 
 export const checkout = async (req: Request, res: Response) => {
     const id = req.user?.id!

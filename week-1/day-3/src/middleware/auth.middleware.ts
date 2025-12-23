@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { errorResponse } from '../utils/response'
-import config from "../utils/env"
+import { errorResponse } from '#utils/response'
+import config from "#utils/env"
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization

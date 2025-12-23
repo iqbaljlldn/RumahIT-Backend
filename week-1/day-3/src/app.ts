@@ -2,12 +2,12 @@ import express, { type Application, type NextFunction, type Request, type Respon
 import morgan from 'morgan'
 import helmet from 'helmet'
 import cors from 'cors'
-import { errorHandler } from './middleware/error.handler'
-import { successResponse } from './utils/response'
-import productRouter from './routes/product.route'
-import categoryRouter from './routes/category.route'
-import orderRouter from './routes/order.route'
-import authRouter from './routes/auth.route'
+import { errorHandler } from '#middleware/error.handler'
+import { successResponse } from '#utils/response'
+import productRouter from '#routes/product.route'
+import categoryRouter from '#routes/category.route'
+import orderRouter from '#routes/order.route'
+import authRouter from '#routes/auth.route'
 
 const app: Application = express()
 

@@ -1,4 +1,4 @@
-import type { Category, Prisma, PrismaClient, Product } from "../generated/client";
+import type { Category, Prisma, PrismaClient, Product } from "#generated/client";
 
 export interface IProductRepository {
     list(
@@ -36,7 +36,7 @@ export class ProductRepository implements IProductRepository {
         return await this.prisma.product.count({ where })
     }
 
-    async findById(id: number): Promise<Category | null & Product | null> {
+    async findById(id: number): Promise<Product | null & Category | null> {
         return await this.prisma.product.findUnique({
             where: {
                 id,

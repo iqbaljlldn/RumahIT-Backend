@@ -1,5 +1,5 @@
-import prisma from '../prisma';
-import config from '../utils/env'
+import prisma from '#prisma';
+import config from '#utils/env'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken';
 
