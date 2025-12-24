@@ -1,5 +1,5 @@
 import type { Category, Prisma, Product } from "#generated/client"
-import type { IProductRepository } from "#repository/product.repository"
+import type { ProductRepository } from "#repository/product.repository"
 
 interface FindAllParams {
     page: number
@@ -26,10 +26,11 @@ export interface IProductService {
     create(data: { name: string, description?: string, price: number, stock: number, image: string, categoryId?: number }): Promise<Product>;
     update(id: string, data: Partial<Product>): Promise<Product>;
     delete(id: string): Promise<Product>;
+    exec(): Promise<{ overview: any, byCategory: any }>
 }
 
 export class ProductService implements IProductService {
-    constructor(private productRepo: IProductRepository) { }
+    constructor(private productRepo: ProductRepository) { }
 
     async list(params: FindAllParams): Promise<ProductListResponse> {
         const { page, limit, search, sortBy, sortOrder } = params
@@ -86,5 +87,15 @@ export class ProductService implements IProductService {
         const numId = parseInt(id)
 
         return await this.productRepo.softDelete(numId)
+    }
+
+    async exec() {
+        const stats = await this.productRepo.getStats()
+        const categoryStats = await this.productRepo.getProductsByCategoryStats()
+
+        return {
+            overview: stats,
+            byCategory: categoryStats,
+        }
     }
 }

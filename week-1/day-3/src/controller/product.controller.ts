@@ -4,14 +4,22 @@ import type { IProductService } from "#services/product.service";
 
 export interface IProductController {
     list(req: Request, res: Response): Promise<void>
-    getById(req: Request, res: Response): Promise<void>;
+    getById(req: Request, res: Response): Promise<void>
     create(req: Request, res: Response): Promise<void>
     update(req: Request, res: Response): Promise<void>
     remove(req: Request, res: Response): Promise<void>
+    getStats(_req: Request, res: Response): Promise<void>
 }
 
 export class ProductController implements IProductController {
-    constructor(private productService: IProductService) { }
+    constructor(private productService: IProductService) {
+        this.list = this.list.bind(this)
+        this.getById = this.getById.bind(this)
+        this.create = this.create.bind(this)
+        this.update = this.update.bind(this)
+        this.remove = this.remove.bind(this)
+        this.getStats = this.getStats.bind(this)
+    }
 
     async list(req: Request, res: Response) {
         const page = Number(req.query.page) || 1
@@ -101,6 +109,18 @@ export class ProductController implements IProductController {
             res,
             "Produk berhasil dihapus",
             deleted
+        )
+    }
+
+    async getStats(_req: Request, res: Response) {
+        const stats = await this.productService.exec()
+
+        successResponse(
+            res,
+            "Statistik produk berhasil diambil",
+            stats,
+            null,
+            200,
         )
     }
 }
