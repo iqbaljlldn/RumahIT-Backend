@@ -2,12 +2,14 @@ import express, { type Application, type NextFunction, type Request, type Respon
 import morgan from 'morgan'
 import helmet from 'helmet'
 import cors from 'cors'
+import swaggerUi from 'swagger-ui-express'
 import { errorHandler } from '#middleware/error.handler'
 import { successResponse } from '#utils/response'
 import productRouter from '#routes/product.route'
 import categoryRouter from '#routes/category.route'
 import orderRouter from '#routes/order.route'
 import authRouter from '#routes/auth.route'
+import swaggerSpec from '#utils/swagger'
 
 const app: Application = express()
 
@@ -24,6 +26,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
     next()
 })
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
 app.get('/', (_req: Request, res: Response) => {
     successResponse(
         res,
@@ -34,6 +38,10 @@ app.get('/', (_req: Request, res: Response) => {
         },
     )
 })
+
+// app.get('/api-docs', (_req: Request, res: Response) => {
+//     res.redirect('/api-docs')
+// })
 
 app.use('/api/products', productRouter)
 app.use('/api/category', categoryRouter)
