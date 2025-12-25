@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
-import { successResponse } from "#utils/response"
-import type { IProductService } from "#services/product.service";
+import { successResponse } from "../utils/response"
+import type { IProductService } from "../services/product.service";
 
 export interface IProductController {
     list(req: Request, res: Response): Promise<void>

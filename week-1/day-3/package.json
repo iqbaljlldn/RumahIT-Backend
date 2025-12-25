@@ -11,7 +11,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "Balll Jlldn",
@@ -20,7 +20,6 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcrypt": "^6.0.0",
@@ -44,19 +43,18 @@
     "@types/express": "^5.0.6",
     "@types/express-validator": "^2.20.33",
     "@types/helmet": "^0.0.48",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
     "prisma": "^7.1.0",
-    "ts-node-dev": "^2.0.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
-  },
-  "imports": {
-    "#*": {
-      "types": "./src/*.ts",
-      "default": "./dist/*.js"
-    }
   }
 }
